@@ -1,9 +1,9 @@
 {
   "name": "skeleton-vue",
   "displayName": "skeleton-vue",
-  "description": "aboym",
-  "publisher": "aboym",
-  "version": "0.0.1",
+  "description": "suzhe",
+  "publisher": "suzhe",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.84.0"
   },

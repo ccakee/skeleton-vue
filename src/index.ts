@@ -3,16 +3,14 @@ import vscode from "vscode";
 import { Uri } from 'vscode';
 
 const TEMPLATE_REGEX = /<template>([\s\S]*?)<\/template>(?![\s\S]*<\/template>)/i;
-const TAG_REGEX = /<([a-zA-Z0-9\-]+)([^>]*)>/g;
-const CLASS_REGEX = /class="([^"]*)"/;
-const ID_REGEX = /id="([^"]*)"/;
-const STYLE_REGEX = /style="([^"]*)"/;
 
 export async function run(uri: Uri) {
+    console.log(uri, 11111111);
+
     try {
         const data = await fs.readFile(uri.fsPath, 'utf8');
         const templateContent = removeAttributes(data);
-        const template = 
+        const template =
 `<template>
    ${templateContent}
 </template>`;
@@ -29,22 +27,32 @@ export async function run(uri: Uri) {
 
 function extractTemplateContent(template: string): string {
     const regex = /{{\s*(.*?)\s*}}/g;
-    const replacedTemplate = template.replace(regex, '<span style="background-color: #ff0000;"> - - </span>');
+    const replacedTemplate = template.replace(regex, '<span style="background-color: #efefef;"> - - </span>');
     const matches = replacedTemplate.match(TEMPLATE_REGEX);
     return matches && matches.length > 1 ? matches[1] : "";
 }
 
 function removeAttributes(template: string): string {
     const extractedContent = extractTemplateContent(template);
-    return extractedContent.replace(TAG_REGEX, (match, tagName, attributes) => {
-        let newAttributes = '';
-        for (const [attrRegex, attrName] of [[CLASS_REGEX, 'class'], [ID_REGEX, 'id'], [STYLE_REGEX, 'style']]) {
-            const attrMatch = attributes.match(attrRegex);
-            if (attrMatch) {
-                newAttributes += ` ${attrName}="${attrMatch[1]}"`;
-            }
-        }
-        return `<${tagName}${newAttributes}>`;
-    });
+    // 移除 Vue 指令（如 v-if, v-for 等）  
+    function removeVueDirectives(str: string): string {
+        return str.replace(/v-[\w-]+="[^"]*"/g, '')
+            .replace(/v-[\w-]+='[^']*'/g, '')
+            .replace(/v-[\w-]+/g, '');
+    }
+
+    // 移除 Vue 动态属性（如 :class, :style, :xx 等）  
+    function removeVueDynamicAttrs(str: string): string {
+        return str.replace(/:[\w-]+="[^"]*"/g, '')
+            .replace(/:[\w-]+='[^']*'/g, '')
+            .replace(/@[\w-]+="[^"]*"/g, '')
+            .replace(/@[\w-]+='[^']*'/g, '');
+    }
+
+    let result = removeVueDirectives(extractedContent);
+
+    result = removeVueDynamicAttrs(result);
+
+    return result;
 }
 
